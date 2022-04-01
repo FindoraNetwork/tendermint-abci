@@ -44,7 +44,7 @@ mod server;
 /// Main Trait for an ABCI application. Provides generic responses for all callbacks
 /// Override desired callbacks as needed.  Tendermint makes 3 TCP connections to the
 /// application and does so in a synchonized manner.
-pub trait Application {
+pub trait Application: Send + Sync + Clone + 'static {
     /// Query Connection: Called on startup from Tendermint.  The application should normally
     /// return the last know state so Tendermint can determine if it needs to replay blocks
     /// to the application.

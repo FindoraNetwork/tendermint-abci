@@ -1,13 +1,10 @@
 use std::net::SocketAddr;
-use std::ops::DerefMut;
-use std::sync::Arc;
 
 use env_logger::Env;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tokio::net::TcpListener;
 use tokio::runtime;
-use tokio::sync::Mutex;
 use tokio_util::codec::Decoder;
 
 use crate::codec::ABCICodec;
@@ -16,20 +13,21 @@ use crate::Application;
 
 async fn serve_async<A>(app: A, addr: SocketAddr)
 where
-    A: Application + 'static + Send + Sync,
+    A: Application,
 {
-    let app = Arc::new(Mutex::new(app));
     let mut listener = TcpListener::bind(&addr).await.unwrap();
     while let Some(Ok(socket)) = listener.next().await {
-        let app_instance = app.clone();
+        let app = app.clone();
         tokio::spawn(async move {
+            let mut app = app.clone();
+
             info!("Got connection! {:?}", socket);
             let framed = ABCICodec::new().framed(socket);
             let (mut writer, mut reader) = framed.split();
             let mut mrequest = reader.next().await;
             while let Some(Ok(ref request)) = mrequest {
                 debug!("Got Request! {:?}", request);
-                let response = respond(&app_instance, request).await;
+                let response = respond(&mut app, request).await;
                 debug!("Return Response! {:?}", response);
                 writer.send(response).await.expect("sending back response");
                 mrequest = reader.next().await;
@@ -72,13 +70,10 @@ where
     Ok(())
 }
 
-async fn respond<A>(app: &Arc<Mutex<A>>, request: &Request) -> Response
+async fn respond<A>(app: &mut A, request: &Request) -> Response
 where
-    A: Application + 'static + Send + Sync,
+    A: Application,
 {
-    let mut guard = app.lock().await;
-    let app = guard.deref_mut();
-
     let mut response = Response::new();
 
     match request.value {

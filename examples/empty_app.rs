@@ -4,6 +4,7 @@ extern crate env_logger;
 use env_logger::Env;
 
 // Simple example that responds with defaults to Tendermint
+#[derive(Debug, Clone)]
 struct EmptyApp;
 
 // Implement the Application and use default responses
