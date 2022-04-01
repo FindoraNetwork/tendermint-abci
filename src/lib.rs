@@ -10,6 +10,7 @@
 //! the Trait.  The app doesn't do any actual processing on a transaction.
 //!
 //! ```rust,no_run
+//! #[derive(Debug, Clone)]
 //! struct EmptyApp;
 //!
 //! impl abci::Application for EmptyApp {}

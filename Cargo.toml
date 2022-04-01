@@ -2,7 +2,7 @@
 name = "abci"
 version = "0.7.2"
 authors = ["Adrian Brink <adrian@brink-holdings.com>", "Jackson Lewis <st.japa6@gmail.com>", "Dave Bryson", "Tomas Tauber"]
-edition = "2018"
+edition = "2021"
 license = "MIT/Apache-2.0"
 description = "Tendermint ABCI server for Rust"
 homepage = "https://tendermint.com/docs/spec/abci/"
