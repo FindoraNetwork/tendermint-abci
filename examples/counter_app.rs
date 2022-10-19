@@ -34,13 +34,13 @@ impl abci::Application for CounterApp {
     // Validate transactions.  Rule:  Transactions must be incremental: 1,2,3,4...
     fn check_tx(&mut self, req: &RequestCheckTx) -> ResponseCheckTx {
         // Get the Tx [u8] and convert to u64
-        let c = convert_tx(req.get_tx());
+        let c = convert_tx(&req.tx);
         let mut resp = ResponseCheckTx::new();
 
         // Validation logic
         if c != self.count + 1 {
-            resp.set_code(1);
-            resp.set_log(String::from("Count must be incremental!"));
+            resp.code = 1;
+            resp.log = String::from("Count must be incremental!");
             return resp;
         }
 
@@ -51,7 +51,7 @@ impl abci::Application for CounterApp {
 
     fn deliver_tx(&mut self, req: &RequestDeliverTx) -> ResponseDeliverTx {
         // Get the Tx [u8]
-        let c = convert_tx(req.get_tx());
+        let c = convert_tx(&req.tx);
         // Update state
         self.count = c;
         // Return default code 0 == bueno
@@ -65,7 +65,7 @@ impl abci::Application for CounterApp {
         let mut buf = [0; 8];
         BigEndian::write_u64(&mut buf, self.count);
         // Set data so last state is included in the block
-        resp.set_data(buf.to_vec());
+        resp.data = buf.to_vec();
         resp
     }
 }

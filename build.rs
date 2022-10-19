@@ -1,14 +1,13 @@
-extern crate protobuf_codegen_pure;
-
 fn main() {
-    protobuf_codegen_pure::Codegen::new()
-        .out_dir("src/messages")
-        .inputs(&[
-            "protobuf/abci.proto",
-            "protobuf/libs/kv/types.proto",
-            "protobuf/crypto/merkle/merkle.proto",
-        ])
+    protobuf_codegen::Codegen::new()
+        .pure()
         .include("protobuf")
-        .run()
-        .expect("protoc");
+        .inputs(&[
+            "protobuf/third_party/proto/gogoproto/gogo.proto",
+            "protobuf/crypto/merkle/merkle.proto",
+            "protobuf/libs/kv/types.proto",
+            "protobuf/abci.proto",
+        ])
+        .cargo_out_dir("generated_with_pure")
+        .run_from_script();
 }
