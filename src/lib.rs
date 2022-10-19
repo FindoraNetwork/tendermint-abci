@@ -31,16 +31,14 @@ extern crate core;
 extern crate protobuf;
 extern crate tokio;
 
-use std::net::SocketAddr;
-
-pub use crate::messages::abci::*;
-pub use crate::messages::merkle::*;
-pub use crate::messages::types::*;
-use crate::server::serve;
-
+mod messages {
+    include!(concat!(env!("OUT_DIR"), "/generated_with_pure/mod.rs"));
+}
 mod codec;
-mod messages;
 mod server;
+
+pub use crate::messages::{abci::*, merkle::*, types::*};
+use {crate::server::serve, std::net::SocketAddr};
 
 /// Main Trait for an ABCI application. Provides generic responses for all callbacks
 /// Override desired callbacks as needed.  Tendermint makes 3 TCP connections to the

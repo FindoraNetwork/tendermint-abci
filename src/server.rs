@@ -78,37 +78,34 @@ where
 
     match request.value {
         // Info
-        Some(Request_oneof_value::info(ref r)) => response.set_info(app.info(r)),
+        Some(request::Value::Info(ref r)) => response.set_info(app.info(r)),
         // Init chain
-        Some(Request_oneof_value::init_chain(ref r)) => response.set_init_chain(app.init_chain(r)),
+        Some(request::Value::InitChain(ref r)) => response.set_init_chain(app.init_chain(r)),
         // Set option
-        Some(Request_oneof_value::set_option(ref r)) => response.set_set_option(app.set_option(r)),
+        Some(request::Value::SetOption(ref r)) => response.set_set_option(app.set_option(r)),
         // Query
-        Some(Request_oneof_value::query(ref r)) => response.set_query(app.query(r)),
+        Some(request::Value::Query(ref r)) => response.set_query(app.query(r)),
         // Check tx
-        Some(Request_oneof_value::check_tx(ref r)) => response.set_check_tx(app.check_tx(r)),
+        Some(request::Value::CheckTx(ref r)) => response.set_check_tx(app.check_tx(r)),
         // Begin block
-        Some(Request_oneof_value::begin_block(ref r)) => {
-            response.set_begin_block(app.begin_block(r))
-        }
+        Some(request::Value::BeginBlock(ref r)) => response.set_begin_block(app.begin_block(r)),
         // Deliver Tx
-        Some(Request_oneof_value::deliver_tx(ref r)) => response.set_deliver_tx(app.deliver_tx(r)),
+        Some(request::Value::DeliverTx(ref r)) => response.set_deliver_tx(app.deliver_tx(r)),
         // End block
-        Some(Request_oneof_value::end_block(ref r)) => response.set_end_block(app.end_block(r)),
+        Some(request::Value::EndBlock(ref r)) => response.set_end_block(app.end_block(r)),
         // Commit
-        Some(Request_oneof_value::commit(ref r)) => response.set_commit(app.commit(r)),
+        Some(request::Value::Commit(ref r)) => response.set_commit(app.commit(r)),
         // Flush
-        Some(Request_oneof_value::flush(_)) => response.set_flush(ResponseFlush::new()),
+        Some(request::Value::Flush(_)) => response.set_flush(ResponseFlush::new()),
         // Echo
-        Some(Request_oneof_value::echo(ref r)) => {
-            let echo_msg = r.get_message().to_string();
+        Some(request::Value::Echo(ref r)) => {
             let mut echo = ResponseEcho::new();
-            echo.set_message(echo_msg);
+            echo.message = r.message.clone();
             response.set_echo(echo);
         }
         _ => {
             let mut re = ResponseException::new();
-            re.set_error(String::from("Unrecognized request"));
+            re.error = String::from("Unrecognized request");
             response.set_exception(re)
         }
     }

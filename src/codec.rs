@@ -1,6 +1,6 @@
 use bytes::{buf::BufMutExt, BufMut, BytesMut};
 use integer_encoding::VarInt;
-use protobuf::{Message, ProtobufError};
+use protobuf::{Error, Message};
 use tokio_util::codec::{Decoder, Encoder};
 
 use crate::messages::abci::*;
@@ -16,9 +16,9 @@ impl ABCICodec {
 
 impl Decoder for ABCICodec {
     type Item = Request;
-    type Error = ProtobufError;
+    type Error = Error;
 
-    fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Request>, ProtobufError> {
+    fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Request>, Error> {
         let length = buf.len();
         if length == 0 {
             return Ok(None);
@@ -34,11 +34,11 @@ impl Decoder for ABCICodec {
 }
 
 impl Encoder<Response> for ABCICodec {
-    type Error = ProtobufError;
+    type Error = Error;
 
-    fn encode(&mut self, msg: Response, buf: &mut BytesMut) -> Result<(), ProtobufError> {
+    fn encode(&mut self, msg: Response, buf: &mut BytesMut) -> Result<(), Error> {
         let msg_len = msg.compute_size();
-        let varint = i64::encode_var_vec(i64::from(msg_len));
+        let varint = i64::encode_var_vec(msg_len as i64);
 
         let remaining = buf.remaining_mut();
         let needed = msg_len as usize + varint.len();
@@ -63,7 +63,7 @@ mod tests {
 
         let mut r = Request::new();
         let mut echo = RequestEcho::new();
-        echo.set_message(String::from("Helloworld"));
+        echo.message = String::from("Helloworld");
         r.set_echo(echo);
 
         let msg_len = r.compute_size();
@@ -81,8 +81,7 @@ mod tests {
 
         let mut r = Request::new();
         let mut echo = RequestEcho::new();
-        let st = (0..2 * 4096).map(|_| "X").collect::<String>();
-        echo.set_message(st);
+        echo.message = (0..2 * 4096).map(|_| "X").collect::<String>();
         r.set_echo(echo);
 
         let msg_len = r.compute_size();
@@ -114,7 +113,7 @@ mod tests {
         assert!(v2.is_some());
         let v3 = v2.unwrap();
         assert!(v3.has_echo());
-        assert_eq!(v3.get_echo().get_message(), "Helloworld");
+        assert_eq!(v3.echo().message, String::from("Helloworld"));
     }
 
     #[test]
@@ -137,7 +136,7 @@ mod tests {
 
         let mut r = Response::new();
         let mut echo = ResponseEcho::new();
-        echo.set_message(String::from("Helloworld"));
+        echo.message = String::from("Helloworld");
         r.set_echo(echo);
 
         let buf = &mut BytesMut::new();
