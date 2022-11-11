@@ -22,7 +22,6 @@
 //!
 extern crate byteorder;
 extern crate bytes;
-extern crate env_logger;
 extern crate futures;
 extern crate integer_encoding;
 #[macro_use]

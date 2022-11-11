@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use env_logger::Env;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tokio::net::TcpListener;
@@ -52,10 +51,6 @@ pub fn serve<A>(app: A, addr: SocketAddr) -> std::io::Result<()>
 where
     A: Application + 'static + Send + Sync,
 {
-    env_logger::from_env(Env::default().default_filter_or("info"))
-        .try_init()
-        .ok();
-
     let mut rt = runtime::Builder::new()
         .basic_scheduler()
         .enable_io()
