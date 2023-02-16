@@ -22,11 +22,9 @@
 //!
 extern crate byteorder;
 extern crate bytes;
+extern crate core;
 extern crate futures;
 extern crate integer_encoding;
-#[macro_use]
-extern crate log;
-extern crate core;
 extern crate protobuf;
 extern crate tokio;
 

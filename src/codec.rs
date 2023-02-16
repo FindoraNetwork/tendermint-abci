@@ -4,6 +4,7 @@ use protobuf::{Message, ProtobufError};
 use tokio_util::codec::{Decoder, Encoder};
 
 use crate::messages::abci::*;
+use tracing::trace;
 
 #[derive(Debug)]
 pub struct ABCICodec;
@@ -21,14 +22,17 @@ impl Decoder for ABCICodec {
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Request>, ProtobufError> {
         let length = buf.len();
         if length == 0 {
+            trace!(target: "abci", "Decode zero-length buffer");
             return Ok(None);
         }
-        let varint: (i64, usize) = i64::decode_var(&buf[..]);
-        if varint.0 as usize + varint.1 > length {
+        let variant: (i64, usize) = i64::decode_var(&buf[..]);
+        if variant.0 as usize + variant.1 > length {
+            trace!(target: "abci", "Decode buffer with invalid metadata");
             return Ok(None);
         }
-        let request = Message::parse_from_bytes(&buf[varint.1..(varint.0 as usize + varint.1)])?;
-        let _ = buf.split_to(varint.0 as usize + varint.1);
+        trace!(target: "abci", "Decode {:?} {:?}", variant, &buf[..]);
+        let request = Message::parse_from_bytes(&buf[variant.1..(variant.0 as usize + variant.1)])?;
+        let _ = buf.split_to(variant.0 as usize + variant.1);
         Ok(Some(request))
     }
 }
@@ -48,7 +52,7 @@ impl Encoder<Response> for ABCICodec {
 
         buf.put(varint.as_ref());
         msg.write_to_writer(&mut buf.writer())?;
-        trace!("Encode response! {:?}", &buf[..]);
+        trace!(target: "abci", "Encode response! {:?}", &buf[..]);
         Ok(())
     }
 }
@@ -97,7 +101,7 @@ mod tests {
         buf.put(varint.as_ref());
         r.write_to_writer(&mut (&mut buf).writer())?;
 
-        trace!("Encode response! {:?}", &buf[..]);
+        trace!(target: "abci", "Encode response! {:?}", &buf[..]);
 
         Ok(buf)
     }

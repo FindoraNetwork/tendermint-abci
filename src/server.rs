@@ -9,6 +9,7 @@ use tokio_util::codec::Decoder;
 use crate::codec::ABCICodec;
 use crate::messages::abci::*;
 use crate::Application;
+use tracing::{debug, info};
 
 async fn serve_async<A>(app: A, addr: SocketAddr)
 where
@@ -20,14 +21,14 @@ where
         tokio::spawn(async move {
             let mut app = app.clone();
 
-            info!("Got connection! {:?}", socket);
+            info!(target: "abci", "Got connection! {:?}", socket);
             let framed = ABCICodec::new().framed(socket);
             let (mut writer, mut reader) = framed.split();
             let mut mrequest = reader.next().await;
             while let Some(Ok(ref request)) = mrequest {
-                debug!("Got Request! {:?}", request);
+                debug!(target: "abci", "Got Request! {:?}, value {:?}", request, request.value);
                 let response = respond(&mut app, request).await;
-                debug!("Return Response! {:?}", response);
+                debug!(target: "abci", "Return Response! {:?}", response);
                 writer.send(response).await.expect("sending back response");
                 mrequest = reader.next().await;
             }
