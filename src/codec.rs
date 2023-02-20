@@ -28,7 +28,9 @@ impl Decoder for ABCICodec {
             return Ok(None);
         }
         let request = Message::parse_from_bytes(&buf[varint.1..(varint.0 as usize + varint.1)])?;
-        let _ = buf.split_to(varint.0 as usize + varint.1);
+        if varint.0 > 0 {
+            let _ = buf.split_to(varint.0 as usize + varint.1);
+        }
         Ok(Some(request))
     }
 }
