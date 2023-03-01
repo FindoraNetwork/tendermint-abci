@@ -6,11 +6,15 @@ use tokio_util::codec::{Decoder, Encoder};
 use crate::messages::abci::*;
 
 #[derive(Debug)]
-pub struct ABCICodec;
+pub struct ABCICodec {
+    receive_buf: BytesMut,
+}
 
 impl ABCICodec {
     pub fn new() -> ABCICodec {
-        ABCICodec
+        ABCICodec {
+            receive_buf: Default::default(),
+        }
     }
 }
 
@@ -19,16 +23,18 @@ impl Decoder for ABCICodec {
     type Error = ProtobufError;
 
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Request>, ProtobufError> {
-        let length = buf.len();
-        if length == 0 {
+        if buf.is_empty() && self.receive_buf.is_empty() {
             return Ok(None);
         }
-        let varint: (i64, usize) = i64::decode_var(&buf[..]);
-        if varint.0 as usize + varint.1 > length {
+        self.receive_buf.extend_from_slice(&buf);
+        buf.clear();
+        let varint: (i64, usize) = i64::decode_var(&self.receive_buf[..]);
+        if varint.0 <= 0 || (varint.0 as usize + varint.1) > self.receive_buf.len() {
             return Ok(None);
         }
-        let request = Message::parse_from_bytes(&buf[varint.1..(varint.0 as usize + varint.1)])?;
-        let _ = buf.split_to(varint.0 as usize + varint.1);
+        let request =
+            Message::parse_from_bytes(&self.receive_buf[varint.1..(varint.0 as usize + varint.1)])?;
+        let _ = self.receive_buf.split_to(varint.0 as usize + varint.1);
         Ok(Some(request))
     }
 }
